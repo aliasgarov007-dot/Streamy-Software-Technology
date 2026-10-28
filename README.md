@@ -97,6 +97,7 @@ sequenceDiagram
 ## Lab Deliverables
 - [Project inception and enhanced UML domain model](abstract.md) — Lab 2.
 - [Software requirements and C4 context](SRS.md) — Lab 4.
+- [Sprint workflow, task tracing and C4 containers](sprint_architecture.md) — Lab 5.
 - This README contains the Lab 1 environment and domain model plus the Lab 3 lifecycle and sequence diagram.
 
 ## Technical Clarifications

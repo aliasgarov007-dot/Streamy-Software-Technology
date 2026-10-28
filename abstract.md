@@ -4,7 +4,7 @@
 **Author:** Ali Asgarov | **Neptun:** KXVFXM
 
 ### 1. Architectural Core Objectives
-Streamy is an object-oriented backend media management catalog designed to serve as the core engine for an enterprise digital video streaming marketplace. The application tracks, structures, and processes relationships between media formats, classification taxonomies, and user metric collections.
+Streamy is a Python backend for a video catalog. It stores media details, organizes titles by genre, and records reviews and viewing activity. Its domain model connects films and television shows with seasons, episodes, actors and reviews.
 
 ### 2. Primary System Boundaries
 The Python backend manages catalog metadata, genres, domain relationships, reviews and consumption metrics. Browser interfaces, video storage and delivery through a CDN are external. These labs specify and model the system; implementation of a working streaming service is outside their scope.

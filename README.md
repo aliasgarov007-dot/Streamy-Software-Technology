@@ -124,3 +124,12 @@ classDiagram
     }
     Customer "1" --> "0..*" Order : places
 ```
+![Architecture Diagram](./images/architecture.png)
+
+<!--
+Editable Diagram Source:
+```mermaid
+flowchart TD
+    A[Service A] --&gt; B[Service B]
+```
+-->

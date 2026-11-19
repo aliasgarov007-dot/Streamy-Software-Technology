@@ -99,3 +99,14 @@ User Service-->>-Sign Up Service: 201 Created (User)
 Sign Up Service-->>-Browser: 301 Redirect (Login page)
 end
 ```
+
+# Project Overview
+
+This repository uses Mermaid for architecture and domain documentation.
+
+```mermaid
+flowchart LR
+    Client[Web Client] -->|HTTPS| API[API Gateway]
+    API --> Service[Listing Service]
+    Service --> DB[(Database)]
+```

@@ -110,3 +110,17 @@ flowchart LR
     API --> Service[Listing Service]
     Service --> DB[(Database)]
 ```
+
+```mermaid
+classDiagram
+    direction LR
+    class Order {
+        +int OrderId
+        +string Status
+    }
+    class Customer {
+        +int CustomerId
+        +string Name
+    }
+    Customer "1" --> "0..*" Order : places
+```

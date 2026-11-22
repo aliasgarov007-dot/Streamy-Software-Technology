@@ -159,3 +159,66 @@ flowchart TD
     class LS focusSystem
     class TS,RS,SS supportingSystem
 ```
+
+
+## Streamy Desktop GUI — Project Extension
+
+This extension turns the laboratory domain model into an interactive
+personal media library using Python and Tkinter.
+
+### Features
+
+- Search the sample catalog by title.
+- Filter films and TV shows by genre.
+- View descriptions, actors, seasons and episodes.
+- Add or remove titles from a personal watchlist.
+- Mark titles as watched or unwatched.
+- Save and edit a personal rating from 1 to 5 and a written review.
+- View the number and total catalog duration of titles marked as watched.
+- Save personal data locally in JSON and restore it on startup.
+
+### Run on Ubuntu
+
+Install Tkinter if it is not already available:
+
+```bash
+sudo apt install python3-tk
+```
+
+Run the application from the repository directory:
+
+```bash
+python3 streamy_app.py
+```
+
+### Implementation
+
+- `streamy_core.py`: existing laboratory domain classes.
+- `streamy_catalog.py`: fictional sample catalog and duration calculations.
+- `streamy_gui.py`: catalog browsing, search, filtering and title details.
+- `streamy_storage.py`: JSON validation, loading and atomic file replacement.
+- `streamy_app.py`: personal library controls and application entry point.
+
+Personal data is saved in `streamy_user_data.json` beside the application
+files. This file is excluded from version control.
+
+### Scope
+
+This is a single-user desktop prototype with fictional sample content.
+Playback is a laboratory simulation, not real video streaming or production
+authentication. Duration statistics sum the catalog durations of titles
+marked as watched; they do not measure actual viewing time. Marking a TV
+show as watched counts all its cataloged episodes.
+
+### Desktop Extension Architecture
+
+```mermaid
+flowchart LR
+    User[Desktop User] --> App[streamy_app.py]
+    App --> GUI[streamy_gui.py]
+    App --> Storage[streamy_storage.py]
+    GUI --> Catalog[streamy_catalog.py]
+    Catalog --> Core[streamy_core.py]
+    App --> Core
+    Storage --> JSON[(Local JSON file)]
+```

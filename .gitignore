@@ -1,0 +1,8 @@
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Local Streamy personal data
+streamy_user_data.json
+.streamy_user_data.json.*.tmp

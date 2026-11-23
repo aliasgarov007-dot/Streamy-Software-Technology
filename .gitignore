@@ -6,3 +6,7 @@ __pycache__/
 # Local Streamy personal data
 streamy_user_data.json
 .streamy_user_data.json.*.tmp
+
+# Local editable catalog
+streamy_catalog_data.json
+.streamy_catalog_data.json.*.tmp

@@ -8,6 +8,13 @@ from streamy_gui import StreamyApp
 from streamy_catalog import duration_minutes
 from streamy_storage import DATA_FILE, load_library, save_library
 
+from streamy_catalog_editor import CatalogEditor
+from streamy_catalog_store import (
+    catalog_to_records,
+    records_to_catalog,
+    save_catalog,
+)
+
 
 class PersonalStreamyApp(StreamyApp):
     def __init__(self):
@@ -30,6 +37,8 @@ class PersonalStreamyApp(StreamyApp):
         controls.pack(fill="x", pady=(0, 12), before=content)
 
         actions = [
+            ("Add title", self.add_title),
+            ("Edit title", self.edit_title),
             ("Toggle watchlist", self.toggle_watchlist),
             ("Mark watched / unwatched", self.toggle_watched),
             ("Write / edit review", self.edit_review),
@@ -60,9 +69,60 @@ class PersonalStreamyApp(StreamyApp):
             textvariable=self.stats_var,
             wraplength=700,
         ).grid(
-            row=2, column=0, columnspan=3,
+            row=3, column=0, columnspan=3,
             sticky="w", padx=4, pady=(8, 0),
         )
+    def add_title(self):
+        CatalogEditor(self, on_save=self.save_title_record)
+
+    def edit_title(self):
+        entry = self.selected_entry()
+        if entry is None:
+            return
+
+        record = catalog_to_records([entry])[0]
+        CatalogEditor(
+            self,
+            on_save=self.save_title_record,
+            record=record,
+        )
+
+    def save_title_record(self, record):
+        records = catalog_to_records(self.catalog)
+
+        for index, existing in enumerate(records):
+            if existing["id"] == record["id"]:
+                records[index] = record
+                break
+        else:
+            records.append(record)
+
+        updated = records_to_catalog(records)
+
+        # Save first; keep the current catalog if writing fails.
+        save_catalog(updated)
+
+        self.catalog = updated
+        self.entries_by_id = {
+            entry["id"]: entry for entry in self.catalog
+        }
+        self.sync_reviews()
+
+        genres = sorted({
+            entry["genre"].genre_name for entry in self.catalog
+        })
+        self.genre_box.configure(values=["All genres", *genres])
+
+        self.search_var.set("")
+        self.genre_var.set("All genres")
+        self.view_var.set("All titles")
+        self.refresh_catalog()
+
+        self.tree.selection_set(record["id"])
+        self.tree.focus(record["id"])
+        self.tree.see(record["id"])
+        self.show_details()
+
 
     def selected_entry(self):
         selection = self.tree.selection()
@@ -258,7 +318,7 @@ if __name__ == "__main__":
         error_window.withdraw()
         messagebox.showerror(
             "Cannot open personal library",
-            f"Could not read:\n{DATA_FILE}\n\n{error}\n\n"
+            f"Could not load catalog or personal library data.\n\n{error}\n\n"
             "The existing file has not been overwritten.",
             parent=error_window,
         )

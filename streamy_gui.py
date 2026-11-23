@@ -6,6 +6,7 @@ from tkinter.scrolledtext import ScrolledText
 
 from streamy_catalog import build_catalog, duration_minutes
 from streamy_core import Film
+from streamy_catalog_store import load_catalog
 
 
 class StreamyApp(tk.Tk):
@@ -16,19 +17,23 @@ class StreamyApp(tk.Tk):
         self.geometry("1050x680")
         self.minsize(800, 550)
 
-        self.catalog = build_catalog()
+        self.catalog = load_catalog()
         self.entries_by_id = {
             entry["id"]: entry for entry in self.catalog
         }
 
         self.search_var = tk.StringVar()
         self.genre_var = tk.StringVar(value="All genres")
+        self.view_var = tk.StringVar(value="All titles")
+        self.sort_var = tk.StringVar(value="Title A-Z")
         self.status_var = tk.StringVar()
 
         self.create_widgets()
 
         self.search_var.trace_add("write", self.refresh_catalog)
         self.genre_var.trace_add("write", self.refresh_catalog)
+        self.view_var.trace_add("write", self.refresh_catalog)
+        self.sort_var.trace_add("write", self.refresh_catalog)
 
         self.refresh_catalog()
 
@@ -73,13 +78,43 @@ class StreamyApp(tk.Tk):
             entry["genre"].genre_name for entry in self.catalog
         })
 
-        ttk.Combobox(
+        self.genre_box = ttk.Combobox(
             filters,
             textvariable=self.genre_var,
             values=["All genres", *genres],
             state="readonly",
             width=18,
+        )
+        self.genre_box.pack(side="left", padx=(8, 0))
+
+        browsing = ttk.Frame(main)
+        browsing.pack(fill="x", pady=(0, 12))
+
+        ttk.Label(browsing, text="Show:").pack(side="left")
+
+        ttk.Combobox(
+            browsing,
+            textvariable=self.view_var,
+            values=("All titles", "Watchlist", "Watched", "Unwatched"),
+            state="readonly",
+            width=18,
+        ).pack(side="left", padx=(8, 20))
+
+        ttk.Label(browsing, text="Sort by:").pack(side="left")
+
+        ttk.Combobox(
+            browsing,
+            textvariable=self.sort_var,
+            values=(
+                "Title A-Z",
+                "Newest first",
+                "Shortest first",
+                "My rating: highest",
+            ),
+            state="readonly",
+            width=22,
         ).pack(side="left", padx=(8, 0))
+
 
         content = ttk.Frame(main)
         content.pack(fill="both", expand=True)
@@ -153,12 +188,20 @@ class StreamyApp(tk.Tk):
         previous_selection = self.tree.selection()
         query = self.search_var.get().strip().casefold()
         genre = self.genre_var.get()
+        view = self.view_var.get()
+        sort_mode = self.sort_var.get()
 
-        for item in self.tree.get_children():
-            self.tree.delete(item)
+        # The basic catalog window can also run without a personal library.
+        library = getattr(self, "library", {})
+        watchlist = set(library.get("watchlist", []))
+        watched = set(library.get("watched", []))
+        reviews = library.get("reviews", {})
+
+        visible_entries = []
 
         for entry in self.catalog:
             title = entry["title"]
+            title_id = entry["id"]
 
             if query not in title.name.casefold():
                 continue
@@ -169,6 +212,40 @@ class StreamyApp(tk.Tk):
             ):
                 continue
 
+            if view == "Watchlist" and title_id not in watchlist:
+                continue
+
+            if view == "Watched" and title_id not in watched:
+                continue
+
+            if view == "Unwatched" and title_id in watched:
+                continue
+
+            visible_entries.append(entry)
+
+        def sort_key(entry):
+            title = entry["title"]
+            name = title.name.casefold()
+
+            if sort_mode == "Newest first":
+                return (-title.release_year, name, entry["id"])
+
+            if sort_mode == "Shortest first":
+                return (duration_minutes(title), name, entry["id"])
+
+            if sort_mode == "My rating: highest":
+                rating = reviews.get(entry["id"], {}).get("rating", 0)
+                return (-rating, name, entry["id"])
+
+            return (name, entry["id"])
+
+        visible_entries.sort(key=sort_key)
+
+        for item in self.tree.get_children():
+            self.tree.delete(item)
+
+        for entry in visible_entries:
+            title = entry["title"]
             media_type = "Film" if isinstance(title, Film) else "TV Show"
 
             self.tree.insert(
@@ -181,7 +258,7 @@ class StreamyApp(tk.Tk):
         visible = self.tree.get_children()
         self.status_var.set(
             f"{len(visible)} of {len(self.catalog)} titles displayed"
-            " | Demo catalog"
+            f" | {view} | {sort_mode}"
         )
 
         if visible:
@@ -196,7 +273,8 @@ class StreamyApp(tk.Tk):
             self.show_details()
         else:
             self.set_details(
-                "No matching titles.\n\nTry another search or genre."
+                "No matching titles.\n\n"
+                "Try another search, genre or library filter."
             )
 
     def set_details(self, text):
